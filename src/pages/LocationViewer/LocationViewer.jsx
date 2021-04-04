@@ -34,6 +34,7 @@ export default function LocationViewer() {
   const [depthMap, setDepthMap] = useState([]);
   const location = useLocation();
   const locationRef = useRef();
+  const wrapperRef = useRef();
 
   const locParts = location.pathname.split("/");
   const panoId = locParts[locParts.length - 1];
@@ -69,7 +70,7 @@ export default function LocationViewer() {
           <Save />
         </button>
       </NavBar>
-      <div className="content">
+      <div className="content" ref={wrapperRef}>
         <img
           src={panoramas[panoId]}
           alt="panorama"
@@ -85,6 +86,7 @@ export default function LocationViewer() {
                 data={data}
                 onDelete={() => deleteOverlay(key)}
                 onUpdate={(update) => updateOverlay(key, update)}
+                wrapperRef={wrapperRef}
               />
             );
           })}

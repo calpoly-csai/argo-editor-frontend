@@ -23,7 +23,7 @@ const views = {
   createDataSource: CreateDataSourceView,
 };
 
-export default function Overlay({ data, onDelete, onUpdate }) {
+export default function Overlay({ data, onDelete, onUpdate, wrapperRef }) {
   // The current screen of the overlay
   const [viewName, setViewName] = useState("base");
 
@@ -45,12 +45,8 @@ export default function Overlay({ data, onDelete, onUpdate }) {
   return (
     <motion.section
       drag
-      dragConstraints={{
-        top: 0,
-        left: 0,
-        right: 50,
-        bottom: 50,
-      }}
+      layout
+      dragConstraints={wrapperRef}
       className="Overlay"
       style={positionStyles}
       transition={{ duration: 0.3 }}
