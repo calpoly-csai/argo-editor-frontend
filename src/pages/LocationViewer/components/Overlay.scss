@@ -1,0 +1,115 @@
+.Overlay {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  background-color: rgba(245, 245, 245, 0.705);
+  padding: 20px 20px;
+  width: 300px;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.164);
+  transition: box-shadow 0.6s;
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+  input,
+  textarea {
+    display: block;
+    background: transparent;
+    padding: 10px;
+    border: none;
+    font-size: 20px;
+    font-family: inherit;
+  }
+  input[type="file"] {
+    font-size: initial;
+  }
+
+  textarea {
+    font-size: 15px;
+    height: 100px;
+    width: 100%;
+    resize: none;
+    margin-top: 10px;
+  }
+
+  .responsive-field {
+    font-family: inherit;
+    background: transparent;
+    padding: 10px;
+    border: none;
+    font-size: 20px;
+  }
+
+  nav {
+    text-align: left;
+    padding: 0;
+    height: 30px;
+  }
+  svg {
+    color: black;
+  }
+
+  h2 {
+    text-align: left;
+    font-size: 30px;
+    margin: 10px;
+  }
+
+  ul {
+    list-style: none;
+  }
+
+  p {
+    font-size: 15px;
+  }
+
+  .action {
+    cursor: pointer;
+  }
+
+  .BaseView {
+    button {
+      margin-top: 20px;
+    }
+  }
+
+  .ActionsView {
+    ul {
+      margin-top: 20px;
+      padding-left: 20px;
+      text-align: left;
+
+      .action {
+        display: block;
+        margin: 10px 0;
+        a {
+          display: flex;
+          justify-content: start;
+          align-items: center;
+          span {
+            margin-left: 10px;
+          }
+        }
+      }
+    }
+  }
+
+  .CreatePathView {
+    .field-label {
+      padding-top: 10px;
+      display: block;
+      margin: 0;
+      text-align: left;
+    }
+    select {
+      display: block;
+      width: 100%;
+    }
+  }
+
+  .OverlayPill {
+    padding: 10px;
+    font-size: 17px;
+    border-radius: 10px;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+  }
+}
