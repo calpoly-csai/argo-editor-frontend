@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 
 import NavBar from "../../components/NavBar/NavBar";
-import {useTourLocation} from "../../hooks/tour-graph"
+import {useTourLocation, useSaveTour} from "../../hooks/tour-graph"
 import Api from "../../api"
 
 import { Save } from "react-feather";
@@ -19,10 +19,10 @@ const clamp = (val :number, min :number, max: number) => Math.min(Math.max(val, 
 
 export default function LocationViewer() {
   const [location, updateLocation] = useTourLocation();
+  const save = useSaveTour()
   console.log(location)
   // const depthMap = useDepthMap(location.panorama);
   const locationRef = useRef<HTMLImageElement | null>(null);
-  const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   function addOverlay(e : React.MouseEvent) {
     const el = e.target as Element;
@@ -62,10 +62,10 @@ export default function LocationViewer() {
     <article className="LocationViewer">
       <NavBar className="absolute" title={location.title}>
         <button className="wrapper">
-          <Save />
+          <Save onClick={save} />
         </button>
       </NavBar>
-      <div className="content" ref={wrapperRef}>
+      <div className="content">
         <img
           src={location.panorama}
           alt="panorama"
@@ -80,7 +80,7 @@ export default function LocationViewer() {
                 data={data}
                 onDelete={() => deleteOverlay(key)}
                 onUpdate={(update) => updateOverlay(key, update)}
-                wrapperRef={wrapperRef}
+                wrapperRef={locationRef}
               />
             );
           })}

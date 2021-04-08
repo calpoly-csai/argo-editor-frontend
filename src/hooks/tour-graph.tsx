@@ -35,6 +35,14 @@ export function fetchGraph() {
     })
 }
 
+export function useSaveTour() {
+    const {tourId} = useParams<{tourId? : string}>();
+    return function saveTour() {
+        if(!tourId) return;
+        Api.updateTourGraph(tourId, tourGraphs[tourId])
+    }
+}
+
 export function useTourList() {
     useListener()
     const list = useMemo(() => Object.entries(tourGraphs).map(([id, {title}]) => ({title, id})), [tourGraphs]);

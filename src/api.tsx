@@ -6,10 +6,9 @@ type FindDepthResponse = {
 
 const Api = {
 
-    async updateTourGraph(graph: TourGraph) : Promise<TourGraph> {
+    async updateTourGraph(id: string, graph: TourGraph) {
         try {
-            const {data} = await axios.post("/tour", graph);
-            return data as TourGraph;
+            const {data} = await axios.post("/tour", {...graph, _id : id});
         } catch(err) {
             console.error(err)
             return graph

@@ -10,8 +10,8 @@ import {
   Icon,
 } from "react-feather";
 
-import { motion } from "framer-motion";
-import { useTour, useTourLocation } from "../../../hooks/tour-graph";
+import { motion, PanInfo, useMotionValue } from "framer-motion";
+import { useTour } from "../../../hooks/tour-graph";
 
 type OverlayProps = { 
   data : Overlay, onDelete: () => void , 
@@ -44,13 +44,13 @@ export default function Overlay({ data, onDelete, onUpdate, wrapperRef }: Overla
   // The current screen of the overlay
   const [viewName, setViewName] = useState<OverlayViewName>("base");
 
+  const x = useMotionValue(data.position[0])
+  const y = useMotionValue(data.position[1])
+
+
   // Get the view based on view name
   const CurrentView = views[viewName];
-  // Position the overlay on top of the image
-  const positionStyles = {
-    left: data.position[0] + "px",
-    top: data.position[1] + "px",
-  };
+
   /**
    * Back button functionality.
    */
@@ -59,17 +59,23 @@ export default function Overlay({ data, onDelete, onUpdate, wrapperRef }: Overla
     else setViewName(viewName === "actions" ? "base" : "actions");
   }
 
+  function onDragEnd(e : MouseEvent | TouchEvent | PointerEvent, info : PanInfo) {
+      onUpdate(overlay => void (overlay.position = [x.get(),y.get(),0]))
+
+  }
+
   return (
     <motion.section
       drag
-      layout
       dragConstraints={wrapperRef}
       className="Overlay"
-      style={positionStyles}
+      style={{y, x}}
       transition={{ duration: 0.3 }}
       initial={{ scale: 0.9 }}
       animate={{ scale: 1 }}
       exit={{ scale: 0.9, opacity: 0 }}
+      dragMomentum={false}
+      onDragEnd={onDragEnd}
     >
       <nav>
         <button className="wrapper" onClick={navBack}>

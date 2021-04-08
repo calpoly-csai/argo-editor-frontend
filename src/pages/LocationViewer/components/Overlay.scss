@@ -1,6 +1,8 @@
 .Overlay {
   position: absolute;
-  transform: translate(-50%, -50%);
+  top: 0;
+  left: 0;
+  // transform: translate(-50%, -50%);
   background-color: rgba(245, 245, 245, 0.705);
   padding: 20px 20px;
   width: 300px;
@@ -69,6 +71,13 @@
     button {
       margin-top: 20px;
     }
+
+    .actions-list {
+      padding: 0;
+      margin: 0;
+      list-style: none;
+      text-align: left;
+    }
   }
 
   .ActionsView {
@@ -106,10 +115,12 @@
   }
 
   .OverlayPill {
-    padding: 10px;
-    font-size: 17px;
+    display: inline-block;
+    margin: 15px 7px;
+    padding: 5px 10px;
+    font-size: 14px;
     border-radius: 10px;
-    color: var(--primary);
-    border: 1px solid var(--primary);
+    color: black;
+    border: 1px solid black;
   }
 }
