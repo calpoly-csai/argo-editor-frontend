@@ -103,5 +103,5 @@ function getBase64Image(img) {
   canvas.height = img.naturalHeight;
   canvas.width = img.naturalWidth;
   ctx.drawImage(img, 0, 0);
-  return canvas.toDataURL();
+  return canvas.toBlob();
 }
