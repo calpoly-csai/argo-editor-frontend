@@ -11,7 +11,7 @@ import { Save } from "react-feather";
 import Overlay from "./components/Overlay";
 import produce from "immer";
 
-type OverlayUpdate = (overlay : Overlay) => Overlay;
+type OverlayUpdate = (overlay : Overlay) => void;
 
 const clamp = (val :number, min :number, max: number) => Math.min(Math.max(val, min), max);
 
@@ -79,7 +79,7 @@ export default function LocationViewer() {
                 key={key}
                 data={data}
                 onDelete={() => deleteOverlay(key)}
-                onUpdate={(update: OverlayUpdate) => updateOverlay(key, update)}
+                onUpdate={(update) => updateOverlay(key, update)}
                 wrapperRef={wrapperRef}
               />
             );
