@@ -1,22 +1,21 @@
 import "./Tours.scss";
 
 import { Link } from "react-router-dom";
-import useTourGraph from "../../hooks/useTourGraph"
-
-// We would fetch this list from the server
+import Api from "../../api"
+import { useEffect, useState } from "react";
+import {useTourList} from "../../hooks/tour-graph"
 
 
 export default function Tours() {
-  const tours = useTourGraph();
-  const tourNames = Object.values(tours).map(({title}) => title)
+  const tourNames = useTourList()
   return (
     <article className="page Tours">
       <div className="content">
         <h1>Tours</h1>
         <ul>
-          {tourNames.map((tour) => (
-            <li key={tour}>
-              <Link to={`/tour/${tour}`}>{tour}</Link>
+          {tourNames.map(({title, id}) => (
+            <li key={id}>
+              <Link to={`/tour/${id}`}>{title}</Link>
             </li>
           ))}
         </ul>

@@ -4,6 +4,8 @@ import './index.scss';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
+import "./axios-config"
+
 ReactDOM.render(
   <React.StrictMode>
     <App />

@@ -4,11 +4,11 @@ type FindDepthResponse = {
     data : number[][]
 }
 
-const api = {
+const Api = {
 
     async updateTourGraph(graph: TourGraph) : Promise<TourGraph> {
         try {
-            const {data} = await axios.post("http://127.0.0.1:5000/tour", graph);
+            const {data} = await axios.post("/tour", graph);
             return data as TourGraph;
         } catch(err) {
             console.error(err)
@@ -19,7 +19,7 @@ const api = {
 
     async findDepth(url : string): Promise<number[][]>  {
         try {
-            const {data} = await axios.post("http://127.0.0.1:5000/tour", url);
+            const {data} = await axios.post("/depth", url);
             return data.data as number[][];
         } catch(err) {
             console.error(err)
@@ -59,4 +59,4 @@ const api = {
     },
 }
 
-export default api
+export default Api
