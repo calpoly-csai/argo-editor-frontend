@@ -72,13 +72,13 @@ export default function LocationViewer() {
           ref={locationRef}
         />
         <AnimatePresence>
-          {location.overlays.map((data,key) => {
+          {location.overlays.map((data,index) => {
             return (
               <Overlay
-                key={key}
+                key={getOverlayKey(data)}
                 data={data}
-                onDelete={() => deleteOverlay(key)}
-                onUpdate={(update) => updateOverlay(key, update)}
+                onDelete={() => deleteOverlay(index)}
+                onUpdate={(update) => updateOverlay(index, update)}
                 wrapperRef={locationRef}
               />
             );
