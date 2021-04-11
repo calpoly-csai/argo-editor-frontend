@@ -1,16 +1,38 @@
 import "./TourViewer.scss";
 // import exampleTour from "../../assets/example-tour.json";
 import NavBar from "../../components/NavBar/NavBar";
+import PopupForm from "../../components/PopupForm/PopupForm";
 import Graph from "react-graph-vis";
 import { useHistory } from "react-router-dom";
 import { useTour } from "../../hooks/tour-graph";
-import { useMemo } from "react";
+import React, { useMemo, useState } from "react";
+import { PlusCircle } from "react-feather";
+import { AnimatePresence } from "framer-motion";
+import Api from "../../api";
 
 export default function TourViewer() {
   const history = useHistory();
-  const [tourGraph] = useTour();
+  const [tourGraph, updateTour] = useTour();
+  const [showAddPopup, setShowAddPopup] = useState(false);
   const graph = useMemo(() => compileGraphData(tourGraph), [tourGraph]);
-  console.log(graph);
+
+  async function addTourLocation(e) {
+    let contents = new FormData(e.target);
+    // Add panorama image to the cloud
+    const panorama = contents.get("panorama");
+    let assetLink = await Api.addImage(panorama);
+    let location = {
+      title: contents.get("title"),
+      description: "",
+      panorama: assetLink,
+      overlays: [],
+    };
+
+    const tourId = location.title.replaceAll(" ", "-");
+    updateTour((tour) => {
+      tour.locations[tourId] = location;
+    });
+  }
 
   const options = {
     edges: {
@@ -31,8 +53,31 @@ export default function TourViewer() {
 
   return (
     <article className="TourViewer">
-      <NavBar title={tourGraph.title} className="absolute" />
+      <NavBar title={tourGraph.title} className="absolute">
+        <button className="wrapper" onClick={() => setShowAddPopup((b) => !b)}>
+          <PlusCircle />
+        </button>
+      </NavBar>
       <Graph graph={graph} options={options} events={graphEvents} />
+      <AnimatePresence>
+        {showAddPopup && (
+          <PopupForm
+            onSubmit={addTourLocation}
+            onClose={() => setShowAddPopup(false)}
+          >
+            <h2>New Panorama</h2>
+            <label>
+              <p>Location Name:</p>
+              <input type="text" name="title" required />
+            </label>
+            <label>
+              <p>Panorama:</p>
+              <input type="file" name="panorama" accept="image/*" required />
+            </label>
+            <input type="submit" value="Add" />
+          </PopupForm>
+        )}
+      </AnimatePresence>
     </article>
   );
 }

@@ -4,7 +4,7 @@ import { ArrowLeft } from "react-feather";
 import { useHistory } from "react-router-dom";
 
 type NavBarProps = {
-  children : any,
+  children : React.ReactNode,
   title : String,
   className?: string,
   style?: React.CSSProperties

@@ -26,7 +26,9 @@ h2 {
 
 button,
 input[type="submit"] {
+  display: block;
   padding: 10px 20px;
+  margin: 10px 0;
   cursor: pointer;
   background: var(--primary);
   border-radius: 5px;

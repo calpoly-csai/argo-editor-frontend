@@ -1,0 +1,36 @@
+.PopupForm {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  .backdrop {
+    width: 100vw;
+    height: 100vh;
+    backdrop-filter: blur(5px);
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.445);
+    top: 0;
+    left: 0;
+  }
+
+  nav {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    padding: 10px;
+  }
+
+  .card {
+    position: relative;
+    padding: 20px;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.85);
+    width: 500px;
+    max-width: 100%;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.158);
+  }
+}
