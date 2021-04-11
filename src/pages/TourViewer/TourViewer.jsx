@@ -83,7 +83,6 @@ export default function TourViewer() {
 }
 
 function compileGraphData(tourGraph) {
-  console.log({ tourGraph });
   if (!tourGraph.title.length) return { nodes: [], edges: [] };
   const locationList = Object.entries(tourGraph.locations);
   const nodes = locationList.map(([loc, info]) => ({

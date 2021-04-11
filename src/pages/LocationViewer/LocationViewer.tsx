@@ -20,7 +20,6 @@ const clamp = (val :number, min :number, max: number) => Math.min(Math.max(val, 
 export default function LocationViewer() {
   const [location, updateLocation] = useTourLocation();
   const save = useSaveTour()
-  console.log(location)
   // const depthMap = useDepthMap(location.panorama);
   const locationRef = useRef<HTMLImageElement | null>(null);
 
