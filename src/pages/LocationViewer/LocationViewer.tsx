@@ -31,6 +31,11 @@ export default function LocationViewer() {
     let y = e.clientY - bounds.top - 40;
     y = clamp(y, 0, bounds.height);
 
+    let data = Api.findDepth(location.panorama);
+    alert("TEST DATA")
+    let resolvedResult = Promise.resolve(data);
+    alert(resolvedResult)
+
     const overlay : Overlay = {title: "", description: "", position: [x,y,0], actions: []};
     updateLocation(loc => {
       loc.overlays.push(overlay)
