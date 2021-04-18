@@ -17,6 +17,7 @@ export default function TourViewer() {
 
   async function addTourLocation(e) {
     let contents = new FormData(e.target);
+    setShowAddPopup(false);
     // Add panorama image to the cloud
     const panorama = contents.get("panorama");
     let assetLink = await Api.addImage(panorama);
