@@ -4,6 +4,8 @@ type FindDepthResponse = {
     data : number[][]
 }
 
+type ResourceType = 'image' | 'video' | 'raw';
+
 const Api = {
 
     async updateTourGraph(id: string, graph: TourGraph) {
@@ -43,7 +45,7 @@ const Api = {
         fileWrapper.append("image", file);
         try
         {
-            const {data } = await axios.post("http://127.0.0.1:5000/uploadImage", fileWrapper, {
+            const { data } = await axios.post("http://127.0.0.1:5000/uploadImage", fileWrapper, {
                 headers: {
                   'Content-Type': 'multipart/form-data'
                 }
@@ -56,6 +58,23 @@ const Api = {
         }
         
     },
+
+    async addResource(resource: File, type: ResourceType): Promise<string> {
+        const fileWrapper = new FormData();
+        fileWrapper.append(type, resource);
+        try {
+            const { data } = await axios.post("/upload-resource", fileWrapper, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            return data as string;
+        }
+        catch (err) {
+            console.error(err);
+            return '';
+        }
+    }
 }
 
 export default Api
