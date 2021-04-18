@@ -12,6 +12,7 @@ import {
 
 import { motion, PanInfo, useMotionValue } from "framer-motion";
 import { useTour } from "../../../hooks/tour-graph";
+import Api from "../../../api";
 
 type OverlayProps = { 
   data : Overlay, onDelete: () => void , 
@@ -192,14 +193,16 @@ function CreateLinkView({ data, changeView, onUpdate } : OverlayViewProps) {
 
 function CreatePathView({ changeView, onUpdate, data } : OverlayViewProps) {
   const [tour] = useTour()
-  function handleSubmit(e : React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e : React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const el = e.target as HTMLFormElement
     let formData = new FormData(el);
+    const url = await Api.addResource(formData.get('video') as File, 'video');
     let pathData : OverlayAction = {
       type: "path",
+      video: url,
+      destination: formData.get('destination') as string
     };
-    // maybe upload video to the server here?
     changeView("actions");
     onUpdate(overlay => overlay.actions.push(pathData));
   }
@@ -210,15 +213,15 @@ function CreatePathView({ changeView, onUpdate, data } : OverlayViewProps) {
       <label>
         <p className="field-label">Destination:</p>
 
-        <select placeholder="Destination" name="destination">
-          {Object.values(tour.locations).map(({ title }) => (
-            <option value={title}>{title}</option>
+        <select required placeholder="Destination" name="destination">
+          {Object.entries(tour.locations).map(([id, location]) => (
+            <option value={id}>{location.title}</option>
           ))}
         </select>
       </label>
       <label>
         <p className="field-label">Path Video:</p>
-        <input name="video" type="file" placeholder="Path Video" />
+        <input required name="video" type="file" placeholder="Path Video" />
       </label>
 
       <input type="submit" value="Add Link" />
