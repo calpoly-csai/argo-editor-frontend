@@ -2,6 +2,7 @@ import axios from "axios"
 
 type FindDepthResponse = {
     data : number[][]
+    // Shaina and Samay
 }
 
 const Api = {
@@ -14,7 +15,6 @@ const Api = {
             return graph
         }
     },
-        
 
     async findDepth(url : string): Promise<number[][]>  {
         try {
