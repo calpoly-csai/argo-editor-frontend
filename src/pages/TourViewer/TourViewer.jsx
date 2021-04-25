@@ -14,10 +14,10 @@ export default function TourViewer() {
   const history = useHistory();
   const [tourGraph, updateTour] = useTour();
   const [showAddPopup, setShowAddPopup] = useState(false);
-  const graph = useMemo(() => compileGraphData(tourGraph), [tourGraph]);
 
   async function addTourLocation(e) {
     let contents = new FormData(e.target);
+    setShowAddPopup(false);
     // Add panorama image to the cloud
     const panorama = contents.get("panorama");
     let assetLink = await Api.addImage(panorama);
@@ -44,12 +44,27 @@ export default function TourViewer() {
   };
 
   const graphEvents = {
-    select: function (event) {
+    select(event) {
       let { nodes, edges } = event;
       if (nodes.length)
         history.push(history.location.pathname + "/location/" + nodes[0]);
     },
   };
+
+  const graphData = compileGraphData(tourGraph);
+  const graphKey = generateGraphKey(graphData);
+
+  const graph = useMemo(
+    () => (
+      <Graph
+        graph={graphData}
+        key={graphKey}
+        options={options}
+        events={graphEvents}
+      />
+    ),
+    [graphKey]
+  );
 
   return (
     <article className="TourViewer">
@@ -58,22 +73,32 @@ export default function TourViewer() {
           <PlusCircle />
         </button>
       </NavBar>
-      <Graph graph={graph} options={options} events={graphEvents} />
+      {graph}
       <AnimatePresence>
         {showAddPopup && (
           <PopupForm
             onSubmit={addTourLocation}
             onClose={() => setShowAddPopup(false)}
           >
-            <h2>New Panorama</h2>
-            <label>
-              <p>Location Name:</p>
-              <input type="text" name="title" required />
-            </label>
-            <label>
-              <p>Panorama:</p>
-              <input type="file" name="panorama" accept="image/*" required />
-            </label>
+            <h2 className="popup-title">New Panorama</h2>
+            <label htmlFor="title">Location Name:</label>
+
+            <input
+              className="text-field"
+              type="text"
+              name="title"
+              id="title"
+              required
+            />
+
+            <label htmlFor="panorama-file">Panorama:</label>
+            <input
+              type="file"
+              name="panorama"
+              id="panorama-file"
+              accept="image/*"
+              required
+            />
             <input type="submit" value="Add" />
           </PopupForm>
         )}
@@ -102,4 +127,16 @@ function compileGraphData(tourGraph) {
   });
 
   return { nodes, edges };
+}
+
+/**
+ * Graph component key generator since react-graph-vis doesn't work in strict mode :(
+ * @param {*} graphData
+ * @returns A key to determine if the graph changed
+ */
+function generateGraphKey(graphData) {
+  return (
+    graphData.nodes.map((node) => node.id + node.label + node.title).join("") +
+    graphData.edges.map((edge) => edge.to + edge.from).join("")
+  );
 }

@@ -45,7 +45,7 @@ const Api = {
         fileWrapper.append("image", file);
         try
         {
-            const { data } = await axios.post("http://127.0.0.1:5000/uploadImage", fileWrapper, {
+            const { data } = await axios.post("/upload-image", fileWrapper, {
                 headers: {
                   'Content-Type': 'multipart/form-data'
                 }
