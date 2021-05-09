@@ -3,6 +3,10 @@
   flex-direction: column;
   max-height: 100vh;
 
+  .nav-button {
+    margin: 0 10px;
+  }
+
   .content {
     position: relative;
     overflow-x: scroll;
@@ -13,6 +17,24 @@
       display: block;
       height: calc(100vh - 80px);
       object-fit: cover;
+    }
+  }
+
+  .ContextMenu {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 200px;
+    background-color: white;
+    padding: 15px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.253);
+
+    header {
+      display: flex;
+    }
+
+    button {
+      color: var(--error);
     }
   }
 }
