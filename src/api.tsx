@@ -1,8 +1,8 @@
 import axios from "axios"
 
-type FindDepthResponse = {
+/*type FindDepthResponse = {
     data : number[][]
-}
+}*/
 
 type ResourceType = 'image' | 'video' | 'raw';
 
@@ -20,7 +20,7 @@ const Api = {
 
     async findDepth(url : string): Promise<number[][]>  {
         try {
-            const {data} = await axios.post("/depth", url);
+            const {data} = await axios.post("/depth", {url});
             return data.data as number[][];
         } catch(err) {
             console.error(err)

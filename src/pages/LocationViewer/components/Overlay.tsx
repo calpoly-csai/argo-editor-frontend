@@ -47,6 +47,7 @@ export default function Overlay({ data, onDelete, onUpdate, wrapperRef }: Overla
 
   const x = useMotionValue(data.position[0])
   const y = useMotionValue(data.position[1])
+  const z = useMotionValue(data.position[2])
 
 
   // Get the view based on view name
@@ -70,10 +71,9 @@ export default function Overlay({ data, onDelete, onUpdate, wrapperRef }: Overla
       drag
       dragConstraints={wrapperRef}
       className="Overlay"
-      style={{y, x}}
+      style={{y, x, scale: z}}
       transition={{ duration: 0.3 }}
       initial={{ scale: 0.9 }}
-      animate={{ scale: 1 }}
       exit={{ scale: 0.9, opacity: 0 }}
       dragMomentum={false}
       onDragEnd={onDragEnd}

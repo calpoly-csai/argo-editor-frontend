@@ -23,7 +23,7 @@ const clamp = (val: number, min: number, max: number) =>
 export default function LocationViewer() {
   const [location, updateLocation] = useTourLocation();
   const save = useSaveTour();
-  // const depthMap = useDepthMap(location.panorama);
+  const [depthMap, updateDepthMap] = useState<number[][] | null>(null);
   const locationRef = useRef<HTMLImageElement | null>(null);
   const [showMenu, setShowMenu] = useState(false);
 
@@ -35,16 +35,30 @@ export default function LocationViewer() {
     let y = e.clientY - bounds.top - 40;
     y = clamp(y, 0, bounds.height);
 
-    const overlay: Overlay = {
-      title: "",
-      description: "",
-      position: [x, y, 0],
-      actions: [],
-    };
-    updateLocation((loc) => {
-      loc.overlays.push(overlay);
-      return loc;
-    });
+    if (!depthMap) {
+      const dm = await Api.findDepth(location.panorama);
+      updateDepthMap(dm);
+    }
+
+    if (locationRef.current && depthMap) {
+      let mapX = Math.floor(x * (depthMap.length / locationRef.current.width));
+      let mapY = Math.floor(
+        y * (depthMap[0].length / locationRef.current.height)
+      );
+      let zScalar = 255;
+      let z = depthMap[mapX][mapY];
+      console.log(z);
+      const overlay: Overlay = {
+        title: "",
+        description: "",
+        position: [x, y, z],
+        actions: [],
+      };
+      updateLocation((loc) => {
+        loc.overlays.push(overlay);
+        return loc;
+      });
+    }
   }
 
   function getOverlayKey(overlayData: Overlay) {
