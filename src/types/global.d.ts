@@ -1,6 +1,7 @@
 type TourGraph = {
   title: string;
   description: string;
+  startingLocation: string;
   locations: {
     [location: string]: TourLocation;
   };

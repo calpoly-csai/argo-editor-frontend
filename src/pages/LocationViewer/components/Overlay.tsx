@@ -14,20 +14,28 @@ import { motion, PanInfo, useMotionValue } from "framer-motion";
 import { useTour } from "../../../hooks/tour-graph";
 import Api from "../../../api";
 
-type OverlayProps = { 
-  data : Overlay, onDelete: () => void , 
-  onUpdate : (update : (overlay: Overlay) => void) => void , 
-  wrapperRef: React.RefObject<Element> 
-}
-
-type OverlayViewName = "base" | "actions" | "createLink" | "createPortal" | "createPath" | "createDataSource";
-
-type OverlayViewProps = {
-  data: Overlay,
-  changeView: (name:OverlayViewName) => void,
-  onUpdate : (update : (overlay: Overlay) => void) => void,
+type OverlayProps = {
+  data: Overlay;
+  onDelete: () => void;
+  onUpdate: (update: (overlay: Overlay) => void) => void;
+  onPositionUpdate: (x: number, y: number) => void;
+  wrapperRef: React.RefObject<Element>;
+  panoramaDimensions: [number, number];
 };
 
+type OverlayViewName =
+  | "base"
+  | "actions"
+  | "createLink"
+  | "createPortal"
+  | "createPath"
+  | "createDataSource";
+
+type OverlayViewProps = {
+  data: Overlay;
+  changeView: (name: OverlayViewName) => void;
+  onUpdate: (update: (overlay: Overlay) => void) => void;
+};
 
 // A mapping of names to views. viewName will index into this array in order to display the correct UI component.
 const views = {
@@ -39,16 +47,22 @@ const views = {
   createDataSource: CreateDataSourceView,
 };
 
-
-
-export default function Overlay({ data, onDelete, onUpdate, wrapperRef }: OverlayProps) {
+export default function Overlay({
+  data,
+  onDelete,
+  onUpdate,
+  onPositionUpdate,
+  wrapperRef,
+  panoramaDimensions,
+}: OverlayProps) {
   // The current screen of the overlay
   const [viewName, setViewName] = useState<OverlayViewName>("base");
-
-  const x = useMotionValue(data.position[0])
-  const y = useMotionValue(data.position[1])
-  const z = useMotionValue(data.position[2])
-
+  const scaledPosition = [...data.position];
+  scaledPosition[0] *= panoramaDimensions[0];
+  scaledPosition[1] *= panoramaDimensions[1];
+  const x = useMotionValue(scaledPosition[0]);
+  const y = useMotionValue(scaledPosition[1]);
+  const z = useMotionValue(scaledPosition[2]);
 
   // Get the view based on view name
   const CurrentView = views[viewName];
@@ -61,9 +75,11 @@ export default function Overlay({ data, onDelete, onUpdate, wrapperRef }: Overla
     else setViewName(viewName === "actions" ? "base" : "actions");
   }
 
-  function onDragEnd(e : MouseEvent | TouchEvent | PointerEvent, info : PanInfo) {
-      onUpdate(overlay => void (overlay.position = [x.get(),y.get(),0]))
-
+  function onDragEnd(e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) {
+    onPositionUpdate(
+      x.get() / panoramaDimensions[0],
+      y.get() / panoramaDimensions[1]
+    );
   }
 
   return (
@@ -71,7 +87,7 @@ export default function Overlay({ data, onDelete, onUpdate, wrapperRef }: Overla
       drag
       dragConstraints={wrapperRef}
       className="Overlay"
-      style={{y, x, scale: z}}
+      style={{ y, x, scale: z }}
       transition={{ duration: 0.3 }}
       initial={{ scale: 0.9 }}
       exit={{ scale: 0.9, opacity: 0 }}
@@ -89,12 +105,12 @@ export default function Overlay({ data, onDelete, onUpdate, wrapperRef }: Overla
 }
 
 function BaseView(props: OverlayViewProps) {
-  function updateTitle(e : React.ChangeEvent<HTMLInputElement>) {
-    props.onUpdate(overlay => void (overlay.title = e.target.value));
+  function updateTitle(e: React.ChangeEvent<HTMLInputElement>) {
+    props.onUpdate((overlay) => void (overlay.title = e.target.value));
   }
 
   function updateDescription(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    props.onUpdate(overlay => void (overlay.description = e.target.value));
+    props.onUpdate((overlay) => void (overlay.description = e.target.value));
   }
   return (
     <form className="BaseView">
@@ -121,13 +137,13 @@ function BaseView(props: OverlayViewProps) {
 }
 
 type ActionsList = {
-  symbol: Icon,
-  to : OverlayViewName,
-  name : string
+  symbol: Icon;
+  to: OverlayViewName;
+  name: string;
 }[];
 
 function ActionsView(props: OverlayViewProps) {
-  const actions : ActionsList = [
+  const actions: ActionsList = [
     {
       symbol: Link,
       to: "createLink",
@@ -167,18 +183,18 @@ function ActionsView(props: OverlayViewProps) {
   );
 }
 
-function CreateLinkView({ data, changeView, onUpdate } : OverlayViewProps) {
-  function handleSubmit(e : React.FormEvent<HTMLFormElement>) {
+function CreateLinkView({ data, changeView, onUpdate }: OverlayViewProps) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const el = e.target as HTMLFormElement
+    const el = e.target as HTMLFormElement;
     let formData = new FormData(el);
-    let linkData : OverlayAction = {
+    let linkData: OverlayAction = {
       type: "external-link",
       title: formData.get("title"),
       link: formData.get("link"),
     };
     changeView("actions");
-    onUpdate(overlay => void (overlay.actions.push(linkData)));
+    onUpdate((overlay) => void overlay.actions.push(linkData));
   }
 
   return (
@@ -191,20 +207,20 @@ function CreateLinkView({ data, changeView, onUpdate } : OverlayViewProps) {
   );
 }
 
-function CreatePathView({ changeView, onUpdate, data } : OverlayViewProps) {
-  const [tour] = useTour()
-  async function handleSubmit(e : React.FormEvent<HTMLFormElement>) {
+function CreatePathView({ changeView, onUpdate, data }: OverlayViewProps) {
+  const [tour] = useTour();
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const el = e.target as HTMLFormElement
+    const el = e.target as HTMLFormElement;
     let formData = new FormData(el);
-    const url = await Api.addResource(formData.get('video') as File, 'video');
-    let pathData : OverlayAction = {
+    const url = await Api.addResource(formData.get("video") as File, "video");
+    let pathData: OverlayAction = {
       type: "path",
       video: url,
-      destination: formData.get('destination') as string
+      destination: formData.get("destination") as string,
     };
     changeView("actions");
-    onUpdate(overlay => overlay.actions.push(pathData));
+    onUpdate((overlay) => overlay.actions.push(pathData));
   }
   return (
     <form className="CreatePathView" onSubmit={handleSubmit}>
@@ -229,7 +245,7 @@ function CreatePathView({ changeView, onUpdate, data } : OverlayViewProps) {
   );
 }
 
-function CreateDataSourceView(props : OverlayViewProps) {
+function CreateDataSourceView(props: OverlayViewProps) {
   return (
     <form className="CreateDataSourceView">
       <h2> New Link </h2>
@@ -240,8 +256,8 @@ function CreateDataSourceView(props : OverlayViewProps) {
   );
 }
 
-function CreatePortalView(props : OverlayViewProps) {
-  const [tour] = useTour()
+function CreatePortalView(props: OverlayViewProps) {
+  const [tour] = useTour();
   return (
     <form className="CreatePortalView">
       <select>
@@ -254,6 +270,6 @@ function CreatePortalView(props : OverlayViewProps) {
   );
 }
 
-function OverlayPill(props: {action : OverlayAction}) {
+function OverlayPill(props: { action: OverlayAction }) {
   return <li className="OverlayPill">{props.action.type}</li>;
 }

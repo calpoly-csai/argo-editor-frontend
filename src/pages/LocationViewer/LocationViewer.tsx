@@ -22,10 +22,16 @@ const clamp = (val: number, min: number, max: number) =>
 
 export default function LocationViewer() {
   const [location, updateLocation] = useTourLocation();
+
   const save = useSaveTour();
-  const [depthMap, updateDepthMap] = useState<number[][] | null>(null);
+
+  const depthMap = useDepthMap(location.panorama);
+
   const locationRef = useRef<HTMLImageElement | null>(null);
-  const [showMenu, setShowMenu] = useState(false);
+  const panoramaDimensions = [
+    locationRef.current?.width || 1,
+    locationRef.current?.height || 1,
+  ] as [number, number];
 
   function addOverlay(e: React.MouseEvent) {
     const el = e.target as Element;
@@ -35,23 +41,17 @@ export default function LocationViewer() {
     let y = e.clientY - bounds.top - 40;
     y = clamp(y, 0, bounds.height);
 
-    if (!depthMap) {
-      const dm = await Api.findDepth(location.panorama);
-      updateDepthMap(dm);
-    }
-
     if (locationRef.current && depthMap) {
-      let mapX = Math.floor(x * (depthMap.length / locationRef.current.width));
-      let mapY = Math.floor(
-        y * (depthMap[0].length / locationRef.current.height)
-      );
-      let zScalar = 255;
-      let z = depthMap[mapX][mapY];
-      console.log(z);
+      const { width, height } = locationRef.current;
+      let mapX = Math.floor(x * (depthMap.length / width));
+      let mapY = Math.floor(y * (depthMap[0].length / height));
+      let depth = depthMap[mapX][mapY];
+      let norm_x = x / width;
+      let norm_y = y / height;
       const overlay: Overlay = {
         title: "",
         description: "",
-        position: [x, y, z],
+        position: [norm_x, norm_y, depth],
         actions: [],
       };
       updateLocation((loc) => {
@@ -76,6 +76,21 @@ export default function LocationViewer() {
     updateLocation((loc) => {
       loc.overlays[key] = produce(loc.overlays[key], update);
       return loc;
+    });
+  }
+
+  function updateOverlayPosition(key: number, x: number, y: number) {
+    if (!depthMap) return;
+    updateOverlay(key, (overlay) => {
+      const [w, h] = panoramaDimensions;
+      x = clamp(x, 0, w);
+      y = clamp(y, 0, h);
+      overlay.position[0] = x;
+      overlay.position[1] = y;
+      const mapX = Math.floor(x * (depthMap.length / w));
+      const mapY = Math.floor(y * (depthMap[0].length / h));
+      const depth = depthMap[mapX][mapY];
+      overlay.position[2] = depth;
     });
   }
 
@@ -104,7 +119,9 @@ export default function LocationViewer() {
                 data={data}
                 onDelete={() => deleteOverlay(index)}
                 onUpdate={(update) => updateOverlay(index, update)}
+                onPositionUpdate={(x, y) => updateOverlayPosition(index, x, y)}
                 wrapperRef={locationRef}
+                panoramaDimensions={panoramaDimensions}
               />
             );
           })}
@@ -120,8 +137,11 @@ export default function LocationViewer() {
  * @param imageUrl The Cloudinary resource URL from the tour graph.
  */
 function useDepthMap(imageUrl: string) {
-  const [depthMap, setDepthMap] = useState<number[][]>([[]]);
-  useEffect(() => void Api.findDepth(imageUrl).then(setDepthMap));
+  const [depthMap, setDepthMap] = useState<number[][]>();
+
+  useEffect(() => {
+    Api.findDepth(imageUrl).then(setDepthMap);
+  }, [imageUrl]);
   return depthMap;
 }
 
