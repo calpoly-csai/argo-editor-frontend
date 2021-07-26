@@ -2,6 +2,7 @@ import "./LocationViewer.scss";
 
 import React, { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { toast } from "react-toastify";
 
 import NavBar from "../../components/NavBar/NavBar";
 import { useTourLocation, useSaveTour, useTour } from "../../hooks/tour-graph";
@@ -34,6 +35,7 @@ export default function LocationViewer() {
   ] as [number, number];
 
   function addOverlay(e: React.MouseEvent) {
+    console.log("add");
     const el = e.target as Element;
     const bounds = el.getBoundingClientRect();
     let x = e.clientX - bounds.left - 150;
@@ -42,6 +44,7 @@ export default function LocationViewer() {
     y = clamp(y, 0, bounds.height);
 
     if (locationRef.current && depthMap) {
+      console.log("mounted overlay");
       const { width, height } = locationRef.current;
       let mapX = Math.floor(x * (depthMap.length / width));
       let mapY = Math.floor(y * (depthMap[0].length / height));
@@ -58,6 +61,8 @@ export default function LocationViewer() {
         loc.overlays.push(overlay);
         return loc;
       });
+    } else {
+      toast.warn("Loading depth map...");
     }
   }
 

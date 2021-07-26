@@ -13,6 +13,7 @@ import Api from "../../api";
 export default function TourViewer() {
   const history = useHistory();
   const [tourGraph, updateTour] = useTour();
+  console.log(tourGraph);
   const [showAddPopup, setShowAddPopup] = useState(false);
 
   async function addTourLocation(e) {
