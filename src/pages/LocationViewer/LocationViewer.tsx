@@ -27,7 +27,7 @@ export default function LocationViewer() {
   const save = useSaveTour();
 
   const depthMap = useDepthMap(location.panorama);
-
+  const [showMenu, setShowMenu] = useState(false);
   const locationRef = useRef<HTMLImageElement | null>(null);
   const panoramaDimensions = [
     locationRef.current?.width || 1,
@@ -35,7 +35,6 @@ export default function LocationViewer() {
   ] as [number, number];
 
   function addOverlay(e: React.MouseEvent) {
-    console.log("add");
     const el = e.target as Element;
     const bounds = el.getBoundingClientRect();
     let x = e.clientX - bounds.left - 150;
