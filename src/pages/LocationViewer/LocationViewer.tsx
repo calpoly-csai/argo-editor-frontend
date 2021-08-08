@@ -2,18 +2,20 @@ import "./LocationViewer.scss";
 
 import React, { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { toast } from "react-toastify";
 
 import NavBar from "../../components/NavBar/NavBar";
 import { useTourLocation, useSaveTour, useTour } from "../../hooks/tour-graph";
 import Api from "../../api";
 
 import { Save, MoreHorizontal, X } from "react-feather";
-import Overlay from "./components/Overlay";
+import Overlay from "./components/Overlay/Overlay";
+import Loader from "./components/Loader/Loader";
 import produce from "immer";
 import { useHistory } from "react-router";
 import { useParams } from "react-router-dom";
 
-type OverlayUpdate = (overlay: Overlay) => void;
+type OverlayUpdate = (overlay: OverlayData) => void;
 
 const clamp = (val: number, min: number, max: number) =>
   Math.min(Math.max(val, min), max);
@@ -22,10 +24,16 @@ const clamp = (val: number, min: number, max: number) =>
 
 export default function LocationViewer() {
   const [location, updateLocation] = useTourLocation();
+
   const save = useSaveTour();
-  // const depthMap = useDepthMap(location.panorama);
-  const locationRef = useRef<HTMLImageElement | null>(null);
+
+  const depthMap = useDepthMap(location.panorama);
   const [showMenu, setShowMenu] = useState(false);
+  const locationRef = useRef<HTMLImageElement | null>(null);
+  const panoramaDimensions = [
+    locationRef.current?.width || 1,
+    locationRef.current?.height || 1,
+  ] as [number, number];
 
   function addOverlay(e: React.MouseEvent) {
     const el = e.target as Element;
@@ -35,19 +43,29 @@ export default function LocationViewer() {
     let y = e.clientY - bounds.top - 40;
     y = clamp(y, 0, bounds.height);
 
-    const overlay: Overlay = {
-      title: "",
-      description: "",
-      position: [x, y, 0],
-      actions: [],
-    };
-    updateLocation((loc) => {
-      loc.overlays.push(overlay);
-      return loc;
-    });
+    if (locationRef.current && depthMap) {
+      const { width, height } = locationRef.current;
+      let mapX = Math.floor(x * (depthMap.length / width));
+      let mapY = Math.floor(y * (depthMap[0].length / height));
+      let depth = depthMap[mapX][mapY];
+      let norm_x = x / width;
+      let norm_y = y / height;
+      const overlay: OverlayData = {
+        title: "",
+        description: "",
+        position: [norm_x, norm_y, depth],
+        actions: [],
+      };
+      updateLocation((loc) => {
+        loc.overlays.push(overlay);
+        return loc;
+      });
+    } else {
+      toast.warn("Loading, please wait");
+    }
   }
 
-  function getOverlayKey(overlayData: Overlay) {
+  function getOverlayKey(overlayData: OverlayData) {
     return `${overlayData.position[0]}${overlayData.position[1]}`;
   }
 
@@ -62,6 +80,21 @@ export default function LocationViewer() {
     updateLocation((loc) => {
       loc.overlays[key] = produce(loc.overlays[key], update);
       return loc;
+    });
+  }
+
+  function updateOverlayPosition(key: number, x: number, y: number) {
+    if (!depthMap) return;
+    updateOverlay(key, (overlay) => {
+      const [w, h] = panoramaDimensions;
+      x = clamp(x, 0, w);
+      y = clamp(y, 0, h);
+      overlay.position[0] = x;
+      overlay.position[1] = y;
+      const mapX = Math.floor(x * (depthMap!.length / w));
+      const mapY = Math.floor(y * (depthMap![0].length / h));
+      const depth = depthMap![mapX][mapY];
+      overlay.position[2] = depth;
     });
   }
 
@@ -83,17 +116,38 @@ export default function LocationViewer() {
           ref={locationRef}
         />
         <AnimatePresence>
-          {location.overlays.map((data, index) => {
-            return (
-              <Overlay
-                key={getOverlayKey(data)}
-                data={data}
-                onDelete={() => deleteOverlay(index)}
-                onUpdate={(update) => updateOverlay(index, update)}
-                wrapperRef={locationRef}
-              />
-            );
-          })}
+          {!depthMap ? (
+            <motion.div
+              transition={{ duration: 0.3 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                position: "fixed",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%,-50%)",
+              }}
+            >
+              <Loader message="Loading Overlays" />
+            </motion.div>
+          ) : (
+            location.overlays.map((data, index) => {
+              return (
+                <Overlay
+                  key={getOverlayKey(data)}
+                  data={data}
+                  onDelete={() => deleteOverlay(index)}
+                  onUpdate={(update) => updateOverlay(index, update)}
+                  onPositionUpdate={(x, y) =>
+                    updateOverlayPosition(index, x, y)
+                  }
+                  wrapperRef={locationRef}
+                  panoramaDimensions={panoramaDimensions}
+                />
+              );
+            })
+          )}
         </AnimatePresence>
       </div>
       <Dropdown showMenu={showMenu} onClose={() => setShowMenu(false)} />
@@ -106,8 +160,11 @@ export default function LocationViewer() {
  * @param imageUrl The Cloudinary resource URL from the tour graph.
  */
 function useDepthMap(imageUrl: string) {
-  const [depthMap, setDepthMap] = useState<number[][]>([[]]);
-  useEffect(() => void Api.findDepth(imageUrl).then(setDepthMap));
+  const [depthMap, setDepthMap] = useState<number[][]>();
+
+  useEffect(() => {
+    Api.findDepth(imageUrl).then(setDepthMap);
+  }, [imageUrl]);
   return depthMap;
 }
 
