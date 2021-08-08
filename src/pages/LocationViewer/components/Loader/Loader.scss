@@ -1,0 +1,28 @@
+.Loader {
+  display: flex;
+  padding: 10px;
+  backdrop-filter: blur(10px);
+  background-color: rgba(245, 245, 245, 0.705);
+  border-radius: 10px;
+  justify-content: center;
+  align-items: center;
+
+  .spinner-wrapper {
+    animation: spin 1.2s linear infinite;
+    transform-origin: 50% 43%;
+    @keyframes spin {
+      from {
+        transform: rotate(0turn);
+      }
+      to {
+        transform: rotate(1turn);
+      }
+    }
+  }
+
+  .message {
+    display: inline-block;
+    font-weight: 600;
+    margin-left: 7px;
+  }
+}

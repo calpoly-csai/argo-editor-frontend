@@ -5,19 +5,20 @@ import {
   ArrowRight,
   ArrowLeft,
   Aperture,
-  Database,
   X as XIcon,
   Icon,
+  Info,
 } from "react-feather";
 
 import { motion, PanInfo, useMotionValue } from "framer-motion";
-import { useTour } from "../../../hooks/tour-graph";
-import Api from "../../../api";
+import { useTour } from "../../../../hooks/tour-graph";
+import Api from "../../../../api";
+import { useEffect } from "react";
 
 type OverlayProps = {
-  data: Overlay;
+  data: OverlayData;
   onDelete: () => void;
-  onUpdate: (update: (overlay: Overlay) => void) => void;
+  onUpdate: (update: (overlay: OverlayData) => void) => void;
   onPositionUpdate: (x: number, y: number) => void;
   wrapperRef: React.RefObject<Element>;
   panoramaDimensions: [number, number];
@@ -28,13 +29,12 @@ type OverlayViewName =
   | "actions"
   | "createLink"
   | "createPortal"
-  | "createPath"
-  | "createDataSource";
+  | "createPath";
 
 type OverlayViewProps = {
-  data: Overlay;
+  data: OverlayData;
   changeView: (name: OverlayViewName) => void;
-  onUpdate: (update: (overlay: Overlay) => void) => void;
+  onUpdate: (update: (overlay: OverlayData) => void) => void;
 };
 
 // A mapping of names to views. viewName will index into this array in order to display the correct UI component.
@@ -44,7 +44,13 @@ const views = {
   createLink: CreateLinkView,
   createPortal: CreatePortalView,
   createPath: CreatePathView,
-  createDataSource: CreateDataSourceView,
+};
+
+const actionToSymbol = {
+  "external-link": Link,
+  portal: Aperture,
+  path: ArrowRight,
+  info: Info, // TODO: add info symbol
 };
 
 export default function Overlay({
@@ -128,8 +134,8 @@ function BaseView(props: OverlayViewProps) {
 
       <button onClick={() => props.changeView("actions")}>Add Actions</button>
       <ul className="actions-list">
-        {props.data.actions.map((action) => (
-          <OverlayPill action={action} />
+        {props.data.actions.map((action, key) => (
+          <OverlayPill key={key} action={action} />
         ))}
       </ul>
     </form>
@@ -159,11 +165,6 @@ function ActionsView(props: OverlayViewProps) {
       to: "createPortal",
       name: "Teleport to Location",
     },
-    {
-      symbol: Database,
-      to: "createDataSource",
-      name: "Fetch Data",
-    },
   ];
 
   return (
@@ -190,8 +191,8 @@ function CreateLinkView({ data, changeView, onUpdate }: OverlayViewProps) {
     let formData = new FormData(el);
     let linkData: OverlayAction = {
       type: "external-link",
-      title: formData.get("title"),
-      link: formData.get("link"),
+      title: formData.get("title") as string,
+      link: formData.get("link") as string,
     };
     changeView("actions");
     onUpdate((overlay) => void overlay.actions.push(linkData));
@@ -216,11 +217,12 @@ function CreatePathView({ changeView, onUpdate, data }: OverlayViewProps) {
     const url = await Api.addResource(formData.get("video") as File, "video");
     let pathData: OverlayAction = {
       type: "path",
+      title: formData.get("title") as string,
       video: url,
       destination: formData.get("destination") as string,
     };
     changeView("actions");
-    onUpdate((overlay) => overlay.actions.push(pathData));
+    onUpdate((overlay) => void overlay.actions.push(pathData));
   }
   return (
     <form className="CreatePathView" onSubmit={handleSubmit}>
@@ -245,24 +247,28 @@ function CreatePathView({ changeView, onUpdate, data }: OverlayViewProps) {
   );
 }
 
-function CreateDataSourceView(props: OverlayViewProps) {
-  return (
-    <form className="CreateDataSourceView">
-      <h2> New Link </h2>
-      <input type="text" placeholder="URL" />
-      <input type="text" placeholder="Data format" />
-      <input type="submit" value="Add Source" />
-    </form>
-  );
-}
-
 function CreatePortalView(props: OverlayViewProps) {
   const [tour] = useTour();
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const el = e.target as HTMLFormElement;
+    let formData = new FormData(el);
+    let portalData: OverlayAction = {
+      type: "portal",
+      title: formData.get("title") as string,
+      destination: formData.get("destination") as string,
+    };
+    props.changeView("actions");
+    props.onUpdate((overlay) => void overlay.actions.push(portalData));
+  }
   return (
-    <form className="CreatePortalView">
-      <select>
-        {Object.values(tour.locations).map(({ title }) => (
-          <option value={title}>{title}</option>
+    <form className="CreatePortalView" onSubmit={handleSubmit}>
+      <input name="title" type="text" placeholder="Portal title" />
+
+      <select name="destination">
+        {Object.entries(tour.locations).map(([id, { title }]) => (
+          <option value={id}>{title}</option>
         ))}
       </select>
       <input type="submit" value="Add Portal" />
@@ -270,6 +276,12 @@ function CreatePortalView(props: OverlayViewProps) {
   );
 }
 
-function OverlayPill(props: { action: OverlayAction }) {
-  return <li className="OverlayPill">{props.action.type}</li>;
+function OverlayPill({ action }: { action: OverlayAction }) {
+  const Icon = actionToSymbol[action.type];
+  return (
+    <li className="OverlayPill">
+      <Icon />
+      <span>{action.title}</span>
+    </li>
+  );
 }

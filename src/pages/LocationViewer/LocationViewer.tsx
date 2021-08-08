@@ -9,12 +9,13 @@ import { useTourLocation, useSaveTour, useTour } from "../../hooks/tour-graph";
 import Api from "../../api";
 
 import { Save, MoreHorizontal, X } from "react-feather";
-import Overlay from "./components/Overlay";
+import Overlay from "./components/Overlay/Overlay";
+import Loader from "./components/Loader/Loader";
 import produce from "immer";
 import { useHistory } from "react-router";
 import { useParams } from "react-router-dom";
 
-type OverlayUpdate = (overlay: Overlay) => void;
+type OverlayUpdate = (overlay: OverlayData) => void;
 
 const clamp = (val: number, min: number, max: number) =>
   Math.min(Math.max(val, min), max);
@@ -43,14 +44,13 @@ export default function LocationViewer() {
     y = clamp(y, 0, bounds.height);
 
     if (locationRef.current && depthMap) {
-      console.log("mounted overlay");
       const { width, height } = locationRef.current;
       let mapX = Math.floor(x * (depthMap.length / width));
       let mapY = Math.floor(y * (depthMap[0].length / height));
       let depth = depthMap[mapX][mapY];
       let norm_x = x / width;
       let norm_y = y / height;
-      const overlay: Overlay = {
+      const overlay: OverlayData = {
         title: "",
         description: "",
         position: [norm_x, norm_y, depth],
@@ -61,11 +61,11 @@ export default function LocationViewer() {
         return loc;
       });
     } else {
-      toast.warn("Loading depth map...");
+      toast.warn("Loading, please wait");
     }
   }
 
-  function getOverlayKey(overlayData: Overlay) {
+  function getOverlayKey(overlayData: OverlayData) {
     return `${overlayData.position[0]}${overlayData.position[1]}`;
   }
 
@@ -91,9 +91,9 @@ export default function LocationViewer() {
       y = clamp(y, 0, h);
       overlay.position[0] = x;
       overlay.position[1] = y;
-      const mapX = Math.floor(x * (depthMap.length / w));
-      const mapY = Math.floor(y * (depthMap[0].length / h));
-      const depth = depthMap[mapX][mapY];
+      const mapX = Math.floor(x * (depthMap!.length / w));
+      const mapY = Math.floor(y * (depthMap![0].length / h));
+      const depth = depthMap![mapX][mapY];
       overlay.position[2] = depth;
     });
   }
@@ -116,19 +116,38 @@ export default function LocationViewer() {
           ref={locationRef}
         />
         <AnimatePresence>
-          {location.overlays.map((data, index) => {
-            return (
-              <Overlay
-                key={getOverlayKey(data)}
-                data={data}
-                onDelete={() => deleteOverlay(index)}
-                onUpdate={(update) => updateOverlay(index, update)}
-                onPositionUpdate={(x, y) => updateOverlayPosition(index, x, y)}
-                wrapperRef={locationRef}
-                panoramaDimensions={panoramaDimensions}
-              />
-            );
-          })}
+          {!depthMap ? (
+            <motion.div
+              transition={{ duration: 0.3 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                position: "fixed",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%,-50%)",
+              }}
+            >
+              <Loader message="Loading Overlays" />
+            </motion.div>
+          ) : (
+            location.overlays.map((data, index) => {
+              return (
+                <Overlay
+                  key={getOverlayKey(data)}
+                  data={data}
+                  onDelete={() => deleteOverlay(index)}
+                  onUpdate={(update) => updateOverlay(index, update)}
+                  onPositionUpdate={(x, y) =>
+                    updateOverlayPosition(index, x, y)
+                  }
+                  wrapperRef={locationRef}
+                  panoramaDimensions={panoramaDimensions}
+                />
+              );
+            })
+          )}
         </AnimatePresence>
       </div>
       <Dropdown showMenu={showMenu} onClose={() => setShowMenu(false)} />
